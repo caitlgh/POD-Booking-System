@@ -18,11 +18,17 @@ body {
 }
 
 #sidebar {
-  width: 240px;
+  width: 260px;
   background: #f4f4f4;
   border-right: 1px solid #ddd;
   display: flex;
   flex-direction: column;
+}
+
+#sidebar-header {
+  padding: 10px;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
 }
 
 #people-list {
@@ -44,6 +50,31 @@ body {
   justify-content: space-between;
 }
 
+#admin-login {
+  padding: 10px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#admin-panel {
+  padding: 10px;
+  border-top: 1px solid #ddd;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#admin-panel input,
+#admin-login input,
+#admin-panel select,
+#admin-panel button,
+#admin-login button {
+  padding: 6px;
+  font-size: 12px;
+}
+
 #main {
   flex: 1;
   display: flex;
@@ -55,6 +86,11 @@ body {
   border-bottom: 1px solid #ddd;
   display: flex;
   justify-content: space-between;
+}
+
+#mode {
+  font-size: 12px;
+  color: #666;
 }
 
 #site {
@@ -95,14 +131,9 @@ body {
 .tent.sharing { background: #e8f7f0; }
 .tent.single { background: #eef4ff; }
 
-.tent.drag-over {
-  border: 2px dashed #000;
-}
+.tent.drag-over { border: 2px dashed #000; }
 
-.slot {
-  margin-top: 4px;
-  font-size: 10px;
-}
+.slot { margin-top: 4px; font-size: 10px; }
 </style>
 </head>
 
@@ -111,8 +142,32 @@ body {
 <div id="app">
 
 <div id="sidebar">
-  <div style="padding:10px;font-weight:bold;">Pad Booking System</div>
+
+  <div id="sidebar-header">Pad Booking System</div>
+
   <div id="people-list"></div>
+
+  <!-- ADMIN LOGIN -->
+  <div id="admin-login">
+    <div style="font-size:12px;font-weight:bold;">Admin Login</div>
+    <input id="admin-pass" type="password" placeholder="Enter admin password" />
+    <button onclick="unlockAdmin()">Unlock Admin</button>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="admin-panel">
+    <div style="font-size:12px;font-weight:bold;">Admin Panel</div>
+
+    <input id="new-name" placeholder="Name" />
+    <select id="new-type">
+      <option value="sharing">Sharing</option>
+      <option value="single">Single</option>
+    </select>
+
+    <button onclick="addPerson()">Add Person</button>
+    <button onclick="lockAdmin()">Lock Admin</button>
+  </div>
+
 </div>
 
 <div id="main">
@@ -130,7 +185,9 @@ body {
 
 <script>
 
-let isAdmin = true;
+let isAdmin = false;
+const ADMIN_PASSWORD = "404044";
+
 let dragId = null;
 
 const PADS = {
@@ -155,8 +212,32 @@ function person(id){
 
 function updateMode(){
   document.getElementById("mode").textContent =
-    isAdmin ? "Admin Mode" : "User Mode";
+    isAdmin ? "Admin" : "User";
 }
+
+/* ---------------- ADMIN ---------------- */
+
+function unlockAdmin(){
+  const pass = document.getElementById("admin-pass").value;
+
+  if(pass === ADMIN_PASSWORD){
+    isAdmin = true;
+    document.getElementById("admin-panel").style.display = "flex";
+    document.getElementById("admin-login").style.display = "none";
+    render();
+  } else {
+    alert("Wrong password");
+  }
+}
+
+function lockAdmin(){
+  isAdmin = false;
+  document.getElementById("admin-panel").style.display = "none";
+  document.getElementById("admin-login").style.display = "flex";
+  render();
+}
+
+/* ---------------- ASSIGN ---------------- */
 
 function assign(pid, padKey, slotType, index){
   const p = person(pid);
@@ -197,11 +278,7 @@ function remove(owner){
   render();
 }
 
-function render(){
-  updateMode();
-  renderPeople();
-  renderPads();
-}
+/* ---------------- PEOPLE ---------------- */
 
 function renderPeople(){
   const list = document.getElementById("people-list");
@@ -213,12 +290,13 @@ function renderPeople(){
     el.draggable = true;
 
     el.innerHTML = `<span>${p.name}</span><span>${p.type}</span>`;
-
     el.ondragstart = () => dragId = p.id;
 
     list.appendChild(el);
   });
 }
+
+/* ---------------- PADS ---------------- */
 
 function renderPads(){
   const site = document.getElementById("site");
@@ -306,6 +384,12 @@ function renderPads(){
     padEl.appendChild(grid);
     site.appendChild(padEl);
   });
+}
+
+function render(){
+  updateMode();
+  renderPeople();
+  renderPads();
 }
 
 render();
