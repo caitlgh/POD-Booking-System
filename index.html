@@ -248,11 +248,14 @@ window.sendLoginLink = async function () {
 
     document.getElementById("login-status").innerText =
       "Login link sent. Check your email.";
-  } catch (e) {
-    console.error(e);
-    document.getElementById("login-status").innerText =
-      "Error sending login link.";
-  }
+} catch (e) {
+  console.error("FULL FIREBASE ERROR:", e);
+  console.error("CODE:", e.code);
+  console.error("MESSAGE:", e.message);
+
+  document.getElementById("login-status").innerText =
+    e.code + " — " + e.message;
+}
 };
 
 /* ---------------- COMPLETE LOGIN ---------------- */
