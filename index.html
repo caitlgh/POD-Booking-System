@@ -135,14 +135,9 @@
       border: 2px dashed #333;
     }
 
-    .slot {
-      margin-top: 4px;
-    }
-
     #login-status {
       margin-top: 10px;
       font-size: 12px;
-      color: #333;
     }
   </style>
 </head>
@@ -192,7 +187,7 @@
 
 </div>
 
-<!-- FIREBASE + APP -->
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import {
@@ -202,7 +197,7 @@ import {
   signInWithEmailLink
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 
-/* ---------------- FIREBASE ---------------- */
+/* ---------------- FIREBASE CONFIG ---------------- */
 
 const firebaseConfig = {
   apiKey: "AIzaSyCK58...",
@@ -215,6 +210,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+/* ---------------- IMPORTANT FIX ---------------- */
+/* ALWAYS use fixed redirect URL (GitHub Pages safe) */
+
+const APP_URL = "https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO/";
 
 /* ---------------- STATE ---------------- */
 
@@ -238,37 +238,48 @@ window.sendLoginLink = async function () {
   const email = document.getElementById("email").value;
 
   const actionCodeSettings = {
-    url: window.location.href,
+    url: APP_URL,   // FIXED (critical for Firebase Email Link auth)
     handleCodeInApp: true
   };
 
   try {
     await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-    window.localStorage.setItem("email", email);
+    localStorage.setItem("emailForSignIn", email);
 
     document.getElementById("login-status").innerText =
-      "Login link sent. Check email.";
+      "Login link sent. Check your email.";
   } catch (e) {
     console.error(e);
+    document.getElementById("login-status").innerText =
+      "Error sending login link.";
   }
 };
+
+/* ---------------- COMPLETE LOGIN ---------------- */
 
 async function completeLogin() {
   if (!isSignInWithEmailLink(auth, window.location.href)) return;
 
-  let email = window.localStorage.getItem("email");
-  if (!email) email = prompt("Email");
+  let email = localStorage.getItem("emailForSignIn");
+  if (!email) email = prompt("Confirm email");
 
-  const result = await signInWithEmailLink(auth, email, window.location.href);
+  try {
+    const result = await signInWithEmailLink(auth, email, window.location.href);
 
-  user = result.user;
+    user = result.user;
+    isAdmin = user.email === "caitlin@firetribe.local";
 
-  isAdmin = user.email === "caitlgh@gmail.com";
+    localStorage.removeItem("emailForSignIn");
 
-  document.getElementById("login-screen").style.display = "none";
-  document.getElementById("app").style.display = "flex";
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "flex";
 
-  render();
+    render();
+  } catch (e) {
+    console.error("Login failed:", e);
+    document.getElementById("login-status").innerText =
+      "Login failed. Try again.";
+  }
 }
 
 completeLogin();
@@ -283,6 +294,7 @@ function role() {
 
 function updateMode() {
   if (!user) return;
+
   const name = user.email.split("@")[0];
   document.getElementById("mode").textContent =
     `${name} · ${role()}`;
