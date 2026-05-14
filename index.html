@@ -17,7 +17,6 @@ body {
   height: 100vh;
 }
 
-/* SIDEBAR */
 #sidebar {
   width: 240px;
   background: #f4f4f4;
@@ -45,7 +44,6 @@ body {
   justify-content: space-between;
 }
 
-/* MAIN */
 #main {
   flex: 1;
   display: flex;
@@ -59,12 +57,6 @@ body {
   justify-content: space-between;
 }
 
-#mode {
-  font-size: 12px;
-  color: #666;
-}
-
-/* PAD LAYOUT */
 #site {
   flex: 1;
   overflow-y: auto;
@@ -92,7 +84,6 @@ body {
   padding: 8px;
 }
 
-/* TENT */
 .tent {
   border: 1px solid #ccc;
   padding: 6px;
@@ -101,13 +92,8 @@ body {
   background: #fafafa;
 }
 
-.tent.sharing {
-  background: #e8f7f0;
-}
-
-.tent.single {
-  background: #eef4ff;
-}
+.tent.sharing { background: #e8f7f0; }
+.tent.single { background: #eef4ff; }
 
 .tent.drag-over {
   border: 2px dashed #000;
@@ -117,11 +103,6 @@ body {
   margin-top: 4px;
   font-size: 10px;
 }
-
-.small {
-  font-size: 9px;
-  opacity: 0.7;
-}
 </style>
 </head>
 
@@ -129,16 +110,11 @@ body {
 
 <div id="app">
 
-<!-- SIDEBAR -->
 <div id="sidebar">
-  <div style="padding:10px;font-weight:bold;">
-    Pad Booking System
-  </div>
-
+  <div style="padding:10px;font-weight:bold;">Pad Booking System</div>
   <div id="people-list"></div>
 </div>
 
-<!-- MAIN -->
 <div id="main">
 
   <div id="header">
@@ -153,7 +129,6 @@ body {
 </div>
 
 <script>
-/* ---------------- DATA ---------------- */
 
 let isAdmin = true;
 let dragId = null;
@@ -174,35 +149,31 @@ let people = [
 
 let assignments = {};
 
-/* ---------------- HELPERS ---------------- */
-
 function person(id){
   return people.find(p => p.id === id);
 }
-
-/* ---------------- MODE ---------------- */
 
 function updateMode(){
   document.getElementById("mode").textContent =
     isAdmin ? "Admin Mode" : "User Mode";
 }
 
-/* ---------------- ASSIGN ---------------- */
-
 function assign(pid, padKey, slotType){
   const p = person(pid);
   if(!p) return;
 
+  if(p.type !== slotType) return;
+
   const key = `${padKey}-${slotType}`;
   const a = assignments[key] || { slot1:null, slot2:null };
 
-  if(p.type === "sharing" && slotType === "sharing"){
-    if(a.slot1) return;
+  if(a.slot1) return;
+
+  if(p.type === "sharing"){
     a.slot1 = a.slot2 = p.name;
   }
 
-  if(p.type === "single" && slotType === "single"){
-    if(a.slot1) return;
+  if(p.type === "single"){
     a.slot1 = p.name;
     a.slot2 = "N/A";
   }
@@ -213,8 +184,6 @@ function assign(pid, padKey, slotType){
 
   render();
 }
-
-/* ---------------- REMOVE ---------------- */
 
 function remove(owner){
   for(const k in assignments){
@@ -229,15 +198,11 @@ function remove(owner){
   render();
 }
 
-/* ---------------- RENDER ---------------- */
-
 function render(){
   updateMode();
   renderPeople();
   renderPads();
 }
-
-/* ---------------- PEOPLE ---------------- */
 
 function renderPeople(){
   const list = document.getElementById("people-list");
@@ -256,8 +221,6 @@ function renderPeople(){
   });
 }
 
-/* ---------------- PADS ---------------- */
-
 function renderPads(){
   const site = document.getElementById("site");
   site.innerHTML = "";
@@ -269,14 +232,11 @@ function renderPads(){
     const padEl = document.createElement("div");
     padEl.className = "pad";
 
-    padEl.innerHTML = `
-      <div class="pad-header">Pad ${padKey}</div>
-    `;
+    padEl.innerHTML = `<div class="pad-header">Pad ${padKey}</div>`;
 
     const grid = document.createElement("div");
     grid.className = "pad-grid";
 
-    /* SHARING SLOTS */
     for(let i=1;i<=pad.sharing;i++){
       const key = `${padKey}-sharing-${i}`;
       const a = assignments[key];
@@ -300,13 +260,17 @@ function renderPads(){
 
       el.ondrop = e => {
         e.preventDefault();
+        el.classList.remove("drag-over");
+
+        const p = person(dragId);
+        if(!p || p.type !== "sharing") return;
+
         assign(dragId, padKey, "sharing");
       };
 
       grid.appendChild(el);
     }
 
-    /* SINGLE SLOTS */
     for(let i=1;i<=pad.single;i++){
       const key = `${padKey}-single-${i}`;
       const a = assignments[key];
@@ -330,6 +294,11 @@ function renderPads(){
 
       el.ondrop = e => {
         e.preventDefault();
+        el.classList.remove("drag-over");
+
+        const p = person(dragId);
+        if(!p || p.type !== "single") return;
+
         assign(dragId, padKey, "single");
       };
 
@@ -340,8 +309,6 @@ function renderPads(){
     site.appendChild(padEl);
   });
 }
-
-/* ---------------- INIT ---------------- */
 
 render();
 
