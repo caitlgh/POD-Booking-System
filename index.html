@@ -158,22 +158,21 @@ function updateMode(){
     isAdmin ? "Admin Mode" : "User Mode";
 }
 
-function assign(pid, padKey, slotType){
+function assign(pid, padKey, slotType, index){
   const p = person(pid);
   if(!p) return;
 
   if(p.type !== slotType) return;
 
-  const key = `${padKey}-${slotType}`;
+  const key = `${padKey}-${slotType}-${index}`;
   const a = assignments[key] || { slot1:null, slot2:null };
 
   if(a.slot1) return;
 
   if(p.type === "sharing"){
-    a.slot1 = a.slot2 = p.name;
-  }
-
-  if(p.type === "single"){
+    a.slot1 = p.name;
+    a.slot2 = p.name;
+  } else {
     a.slot1 = p.name;
     a.slot2 = "N/A";
   }
@@ -231,7 +230,6 @@ function renderPads(){
 
     const padEl = document.createElement("div");
     padEl.className = "pad";
-
     padEl.innerHTML = `<div class="pad-header">Pad ${padKey}</div>`;
 
     const grid = document.createElement("div");
@@ -252,6 +250,8 @@ function renderPads(){
 
       el.ondragover = e => {
         if(!dragId) return;
+        const p = person(dragId);
+        if(!p || p.type !== "sharing") return;
         e.preventDefault();
         el.classList.add("drag-over");
       };
@@ -261,11 +261,9 @@ function renderPads(){
       el.ondrop = e => {
         e.preventDefault();
         el.classList.remove("drag-over");
-
         const p = person(dragId);
         if(!p || p.type !== "sharing") return;
-
-        assign(dragId, padKey, "sharing");
+        assign(dragId, padKey, "sharing", i);
       };
 
       grid.appendChild(el);
@@ -286,6 +284,8 @@ function renderPads(){
 
       el.ondragover = e => {
         if(!dragId) return;
+        const p = person(dragId);
+        if(!p || p.type !== "single") return;
         e.preventDefault();
         el.classList.add("drag-over");
       };
@@ -295,11 +295,9 @@ function renderPads(){
       el.ondrop = e => {
         e.preventDefault();
         el.classList.remove("drag-over");
-
         const p = person(dragId);
         if(!p || p.type !== "single") return;
-
-        assign(dragId, padKey, "single");
+        assign(dragId, padKey, "single", i);
       };
 
       grid.appendChild(el);
