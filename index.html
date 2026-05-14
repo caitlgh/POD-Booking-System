@@ -44,13 +44,20 @@ body {
   background: white;
   border: 1px solid #ddd;
   padding: 8px;
-  cursor: grab;
   font-size: 13px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 6px;
 }
 
-#admin-login {
+.person-chip button {
+  font-size: 10px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+#admin-login, #admin-panel {
   padding: 10px;
   border-top: 1px solid #ddd;
   display: flex;
@@ -58,19 +65,9 @@ body {
   gap: 6px;
 }
 
-#admin-panel {
-  padding: 10px;
-  border-top: 1px solid #ddd;
-  display: none;
-  flex-direction: column;
-  gap: 6px;
-}
+#admin-panel { display: none; }
 
-#admin-panel input,
-#admin-login input,
-#admin-panel select,
-#admin-panel button,
-#admin-login button {
+input, select, button {
   padding: 6px;
   font-size: 12px;
 }
@@ -149,8 +146,7 @@ body {
 
   <!-- ADMIN LOGIN -->
   <div id="admin-login">
-    <div style="font-size:12px;font-weight:bold;">Admin Login</div>
-    <input id="admin-pass" type="password" placeholder="Enter admin password" />
+    <input id="admin-pass" type="password" placeholder="Admin password" />
     <button onclick="unlockAdmin()">Unlock Admin</button>
   </div>
 
@@ -187,7 +183,6 @@ body {
 
 let isAdmin = false;
 const ADMIN_PASSWORD = "404044";
-
 let dragId = null;
 
 const PADS = {
@@ -210,11 +205,6 @@ function person(id){
   return people.find(p => p.id === id);
 }
 
-function updateMode(){
-  document.getElementById("mode").textContent =
-    isAdmin ? "Admin" : "User";
-}
-
 /* ---------------- ADMIN ---------------- */
 
 function unlockAdmin(){
@@ -222,8 +212,8 @@ function unlockAdmin(){
 
   if(pass === ADMIN_PASSWORD){
     isAdmin = true;
-    document.getElementById("admin-panel").style.display = "flex";
     document.getElementById("admin-login").style.display = "none";
+    document.getElementById("admin-panel").style.display = "flex";
     render();
   } else {
     alert("Wrong password");
@@ -232,8 +222,43 @@ function unlockAdmin(){
 
 function lockAdmin(){
   isAdmin = false;
-  document.getElementById("admin-panel").style.display = "none";
   document.getElementById("admin-login").style.display = "flex";
+  document.getElementById("admin-panel").style.display = "none";
+  render();
+}
+
+/* ---------------- PEOPLE (FIXED) ---------------- */
+
+function addPerson(){
+  if(!isAdmin) return;
+
+  const name = document.getElementById("new-name").value.trim();
+  const type = document.getElementById("new-type").value;
+
+  if(!name) return;
+
+  people.push({
+    id: "p" + Date.now(),
+    name,
+    type
+  });
+
+  document.getElementById("new-name").value = "";
+  render();
+}
+
+function deletePerson(id){
+  if(!isAdmin) return;
+
+  // remove from assignments first
+  for(const k in assignments){
+    if(assignments[k].owner === id){
+      delete assignments[k];
+    }
+  }
+
+  people = people.filter(p => p.id !== id);
+
   render();
 }
 
@@ -278,18 +303,33 @@ function remove(owner){
   render();
 }
 
-/* ---------------- PEOPLE ---------------- */
+/* ---------------- RENDER ---------------- */
+
+function render(){
+  document.getElementById("mode").textContent =
+    isAdmin ? "Admin Mode" : "User Mode";
+
+  renderPeople();
+  renderPads();
+}
+
+/* ---------------- PEOPLE LIST ---------------- */
 
 function renderPeople(){
   const list = document.getElementById("people-list");
   list.innerHTML = "";
 
   people.filter(p => !p._slot).forEach(p => {
+
     const el = document.createElement("div");
     el.className = "person-chip";
     el.draggable = true;
 
-    el.innerHTML = `<span>${p.name}</span><span>${p.type}</span>`;
+    el.innerHTML = `
+      <span>${p.name} (${p.type})</span>
+      ${isAdmin ? `<button onclick="deletePerson('${p.id}')">X</button>` : ""}
+    `;
+
     el.ondragstart = () => dragId = p.id;
 
     list.appendChild(el);
@@ -327,7 +367,6 @@ function renderPads(){
       `;
 
       el.ondragover = e => {
-        if(!dragId) return;
         const p = person(dragId);
         if(!p || p.type !== "sharing") return;
         e.preventDefault();
@@ -361,7 +400,6 @@ function renderPads(){
       `;
 
       el.ondragover = e => {
-        if(!dragId) return;
         const p = person(dragId);
         if(!p || p.type !== "single") return;
         e.preventDefault();
@@ -384,12 +422,6 @@ function renderPads(){
     padEl.appendChild(grid);
     site.appendChild(padEl);
   });
-}
-
-function render(){
-  updateMode();
-  renderPeople();
-  renderPads();
 }
 
 render();
