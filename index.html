@@ -120,17 +120,49 @@ input, select, button {
 .tent {
   border: 1px solid #ccc;
   padding: 6px;
-  min-height: 60px;
+  min-height: 70px;
   font-size: 11px;
   background: #fafafa;
+  position: relative;
 }
 
-.tent.sharing { background: #e8f7f0; }
-.tent.single { background: #eef4ff; }
+.tent.booked {
+  background: #c9b6ff;
+}
 
-.tent.drag-over { border: 2px dashed #000; }
+.tent.drag-over {
+  border: 2px dashed #000;
+}
 
-.slot { margin-top: 4px; font-size: 10px; }
+.tent-title {
+  font-weight: bold;
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.slot {
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+.remove-btn {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.remove-btn:hover {
+  opacity: 1;
+}
+
+.export-btn {
+  margin-top: 6px;
+}
 </style>
 </head>
 
@@ -144,13 +176,11 @@ input, select, button {
 
   <div id="people-list"></div>
 
-  <!-- ADMIN LOGIN -->
   <div id="admin-login">
     <input id="admin-pass" type="password" placeholder="Admin password" />
     <button onclick="unlockAdmin()">Unlock Admin</button>
   </div>
 
-  <!-- ADMIN PANEL -->
   <div id="admin-panel">
     <div style="font-size:12px;font-weight:bold;">Admin Panel</div>
 
@@ -161,6 +191,7 @@ input, select, button {
     </select>
 
     <button onclick="addPerson()">Add Person</button>
+    <button onclick="exportExcel()">Export to Excel</button>
     <button onclick="lockAdmin()">Lock Admin</button>
   </div>
 
@@ -227,7 +258,7 @@ function lockAdmin(){
   render();
 }
 
-/* ---------------- PEOPLE (FIXED) ---------------- */
+/* ---------------- PEOPLE ---------------- */
 
 function addPerson(){
   if(!isAdmin) return;
@@ -250,7 +281,6 @@ function addPerson(){
 function deletePerson(id){
   if(!isAdmin) return;
 
-  // remove from assignments first
   for(const k in assignments){
     if(assignments[k].owner === id){
       delete assignments[k];
@@ -258,7 +288,6 @@ function deletePerson(id){
   }
 
   people = people.filter(p => p.id !== id);
-
   render();
 }
 
@@ -301,6 +330,30 @@ function remove(owner){
   if(p) delete p._slot;
 
   render();
+}
+
+/* ---------------- EXPORT ---------------- */
+
+function exportExcel(){
+  if(!isAdmin) return;
+
+  let csv = "Pad,Type,Tent,Name\n";
+
+  for(const key in assignments){
+    const a = assignments[key];
+    const [pad, type, index] = key.split("-");
+    csv += `${pad},${type},${index},${a.slot1}\n`;
+  }
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "pad-bookings.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
 }
 
 /* ---------------- RENDER ---------------- */
@@ -358,12 +411,12 @@ function renderPads(){
       const a = assignments[key];
 
       const el = document.createElement("div");
-      el.className = "tent sharing";
+      el.className = "tent " + (a ? "booked" : "");
 
       el.innerHTML = `
-        <div><b>Sharing ${i}</b></div>
+        <button class="remove-btn" onclick="remove('${a?.owner || ""}')">×</button>
+        <div class="tent-title">Tent ${i} - Sharing</div>
         <div class="slot">${a?.slot1 || "empty"}</div>
-        ${a?.owner ? `<button onclick="remove('${a.owner}')">x</button>` : ""}
       `;
 
       el.ondragover = e => {
@@ -391,12 +444,12 @@ function renderPads(){
       const a = assignments[key];
 
       const el = document.createElement("div");
-      el.className = "tent single";
+      el.className = "tent " + (a ? "booked" : "");
 
       el.innerHTML = `
-        <div><b>Single ${i}</b></div>
+        <button class="remove-btn" onclick="remove('${a?.owner || ""}')">×</button>
+        <div class="tent-title">Tent ${i} - Single</div>
         <div class="slot">${a?.slot1 || "empty"}</div>
-        ${a?.owner ? `<button onclick="remove('${a.owner}')">x</button>` : ""}
       `;
 
       el.ondragover = e => {
