@@ -12,25 +12,14 @@
       background: #fafafa;
     }
 
-    /* LOGIN */
-    #login-screen {
-      padding: 20px;
-    }
-
-    #login-screen input {
-      padding: 8px;
-      width: 260px;
-      margin-right: 8px;
-    }
-
-    /* APP */
     #app {
-      display: none;
+      display: flex;
       height: 100vh;
     }
 
+    /* SIDEBAR */
     #sidebar {
-      width: 220px;
+      width: 240px;
       background: #f4f4f4;
       border-right: 1px solid #ddd;
       display: flex;
@@ -40,6 +29,7 @@
     #sidebar-header {
       padding: 12px;
       border-bottom: 1px solid #ddd;
+      font-weight: bold;
     }
 
     #people-list {
@@ -62,11 +52,11 @@
     }
 
     #admin-panel {
-      display: none;
-      padding: 10px;
-      border-top: 1px solid #ddd;
+      display: flex;
       flex-direction: column;
       gap: 6px;
+      padding: 10px;
+      border-top: 1px solid #ddd;
     }
 
     #admin-panel input,
@@ -92,7 +82,7 @@
 
     #mode {
       font-size: 12px;
-      color: #555;
+      color: #666;
     }
 
     #site {
@@ -112,8 +102,8 @@
     .pod-header {
       padding: 8px;
       background: #eee;
-      font-size: 12px;
       font-weight: bold;
+      font-size: 12px;
     }
 
     .pod-tents {
@@ -132,176 +122,70 @@
     }
 
     .tent.drag-over {
-      border: 2px dashed #333;
-    }
-
-    #login-status {
-      margin-top: 10px;
-      font-size: 12px;
+      border: 2px dashed #000;
     }
   </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="login-screen">
-  <h2>Login</h2>
-
-  <input id="email" placeholder="Enter email" />
-  <button onclick="sendLoginLink()">Send login link</button>
-
-  <p id="login-status"></p>
-</div>
-
-<!-- APP -->
 <div id="app">
 
+  <!-- SIDEBAR -->
   <div id="sidebar">
+
     <div id="sidebar-header">
-      <h3>Unassigned</h3>
-      <button onclick="toggleAdmin()">Admin</button>
+      Campsite System
     </div>
 
     <div id="people-list"></div>
 
     <div id="admin-panel">
+      <div style="font-size:12px;font-weight:bold;">Admin Panel</div>
+
       <input id="new-name" placeholder="Name" />
       <select id="new-type">
         <option value="sharing">Sharing</option>
         <option value="solo">Solo</option>
       </select>
-      <button onclick="addPerson()">Add</button>
-      <button onclick="clearAll()">Clear</button>
+
+      <button onclick="addPerson()">Add Person</button>
+      <button onclick="clearAll()">Clear All</button>
     </div>
+
   </div>
 
+  <!-- MAIN -->
   <div id="main">
+
     <div id="main-header">
-      <div>Tent Booking</div>
+      <div>Tent Booking System</div>
       <div id="mode"></div>
     </div>
 
     <div id="site"></div>
+
   </div>
 
 </div>
 
-<!-- FIREBASE -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-import {
-  getAuth,
-  sendSignInLinkToEmail,
-  isSignInWithEmailLink,
-  signInWithEmailLink
-} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-
-/* ---------------- FIREBASE CONFIG ---------------- */
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCK58...",
-  authDomain: "tent-booking-system-d944f.firebaseapp.com",
-  projectId: "tent-booking-system-d944f",
-  storageBucket: "tent-booking-system-d944f.firebasestorage.app",
-  messagingSenderId: "723510809468",
-  appId: "1:723510809468:web:df385bc113dc49f9fd8af9"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-/* ---------------- IMPORTANT FIX ---------------- */
-/* ALWAYS use fixed redirect URL (GitHub Pages safe) */
-
-const APP_URL = "https://caitlgh.github.io/YOUR-REPO/";
-
+<script>
 /* ---------------- STATE ---------------- */
-
-let user = null;
-let isAdmin = false;
-let dragId = null;
 
 const PODS = 6;
 const TENTS = 12;
 
+let isAdmin = true; // 👈 CHANGE THIS: true = Caitlin (admin), false = user
+
+let dragId = null;
+
 let people = [
-  { id: "p1", name: "Alice", type: "sharing", email: "alice@test.com" },
-  { id: "p2", name: "Ben", type: "solo", email: "ben@test.com" }
+  { id: "p1", name: "Alice", type: "sharing" },
+  { id: "p2", name: "Ben", type: "solo" },
+  { id: "p3", name: "Cara", type: "sharing" }
 ];
 
 let assignments = {};
-
-/* ---------------- LOGIN ---------------- */
-
-window.sendLoginLink = async function () {
-  const email = document.getElementById("email").value;
-
-  const actionCodeSettings = {
-    url: APP_URL,   // FIXED (critical for Firebase Email Link auth)
-    handleCodeInApp: true
-  };
-
-  try {
-    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-    localStorage.setItem("emailForSignIn", email);
-
-    document.getElementById("login-status").innerText =
-      "Login link sent. Check your email.";
-} catch (e) {
-  console.error("FULL FIREBASE ERROR:", e);
-  console.error("CODE:", e.code);
-  console.error("MESSAGE:", e.message);
-
-  document.getElementById("login-status").innerText =
-    e.code + " — " + e.message;
-}
-};
-
-/* ---------------- COMPLETE LOGIN ---------------- */
-
-async function completeLogin() {
-  if (!isSignInWithEmailLink(auth, window.location.href)) return;
-
-  let email = localStorage.getItem("emailForSignIn");
-  if (!email) email = prompt("Confirm email");
-
-  try {
-    const result = await signInWithEmailLink(auth, email, window.location.href);
-
-    user = result.user;
-    isAdmin = user.email === "caitlin@firetribe.local";
-
-    localStorage.removeItem("emailForSignIn");
-
-    document.getElementById("login-screen").style.display = "none";
-    document.getElementById("app").style.display = "flex";
-
-    render();
-  } catch (e) {
-    console.error("Login failed:", e);
-    document.getElementById("login-status").innerText =
-      "Login failed. Try again.";
-  }
-}
-
-completeLogin();
-
-/* ---------------- ROLE ---------------- */
-
-function role() {
-  return isAdmin ? "Admin" : "User";
-}
-
-/* ---------------- MODE ---------------- */
-
-function updateMode() {
-  if (!user) return;
-
-  const name = user.email.split("@")[0];
-  document.getElementById("mode").textContent =
-    `${name} · ${role()}`;
-}
 
 /* ---------------- HELPERS ---------------- */
 
@@ -309,23 +193,18 @@ function person(id) {
   return people.find(p => p.id === id);
 }
 
-/* ---------------- PERMISSIONS ---------------- */
+/* ---------------- ADMIN DISPLAY ---------------- */
 
-function canEdit(id) {
-  return isAdmin || user.email === person(id)?.email;
-}
-
-function canRemove(owner) {
-  return isAdmin || user.email === person(owner)?.email;
+function updateMode() {
+  document.getElementById("mode").textContent =
+    isAdmin ? "Caitlin · Admin" : "User";
 }
 
 /* ---------------- ASSIGN ---------------- */
 
-window.assign = function (pid, tid) {
+function assign(pid, tid) {
   const p = person(pid);
   if (!p) return;
-
-  if (!canEdit(pid)) return;
 
   const a = assignments[tid] || { slot1: null, slot2: null, owner: null };
 
@@ -343,12 +222,12 @@ window.assign = function (pid, tid) {
   p._tent = tid;
 
   render();
-};
+}
 
 /* ---------------- REMOVE ---------------- */
 
-window.remove = function (owner) {
-  if (!canRemove(owner)) return;
+function remove(owner) {
+  const p = person(owner);
 
   for (const k in assignments) {
     if (assignments[k].owner === owner) {
@@ -356,11 +235,10 @@ window.remove = function (owner) {
     }
   }
 
-  const p = person(owner);
   if (p) delete p._tent;
 
   render();
-};
+}
 
 /* ---------------- RENDER ---------------- */
 
@@ -383,10 +261,7 @@ function renderPeople() {
 
     el.innerHTML = `<span>${p.name}</span><span>${p.type}</span>`;
 
-    el.ondragstart = () => {
-      if (!canEdit(p.id)) return;
-      dragId = p.id;
-    };
+    el.ondragstart = () => dragId = p.id;
 
     list.appendChild(el);
   });
@@ -417,11 +292,10 @@ function renderSite() {
       el.className = "tent";
 
       el.innerHTML = `
-        <div>T${t}</div>
-        <div>${a?.slot1 || "empty"}
-          ${a?.owner ? `<button onclick="remove('${a.owner}')">x</button>` : ""}
-        </div>
+        <div><strong>T${t}</strong></div>
+        <div>${a?.slot1 || "empty"}</div>
         <div>${a?.slot2 || ""}</div>
+        ${a?.owner ? `<button onclick="remove('${a.owner}')">Remove</button>` : ""}
       `;
 
       el.ondragover = e => {
@@ -446,17 +320,9 @@ function renderSite() {
   }
 }
 
-/* ---------------- ADMIN ---------------- */
+/* ---------------- ADMIN ACTIONS ---------------- */
 
-window.toggleAdmin = function () {
-  if (!isAdmin) return alert("Admin only");
-
-  const panel = document.getElementById("admin-panel");
-  panel.style.display =
-    panel.style.display === "flex" ? "none" : "flex";
-};
-
-window.addPerson = function () {
+function addPerson() {
   if (!isAdmin) return;
 
   const name = document.getElementById("new-name").value;
@@ -469,15 +335,21 @@ window.addPerson = function () {
   });
 
   render();
-};
+}
 
-window.clearAll = function () {
+function clearAll() {
   if (!isAdmin) return;
 
   people.forEach(p => delete p._tent);
   assignments = {};
+
   render();
-};
+}
+
+/* ---------------- INIT ---------------- */
+
+render();
+
 </script>
 
 </body>
