@@ -1,260 +1,249 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Tent Booking System</title>
+<meta charset="UTF-8" />
+<title>Pad Booking System</title>
 
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: Arial, sans-serif;
-      background: #fafafa;
-    }
+body {
+  font-family: Arial;
+  background: #fafafa;
+}
 
-    #app {
-      display: flex;
-      height: 100vh;
-    }
+#app {
+  display: flex;
+  height: 100vh;
+}
 
-    /* SIDEBAR */
-    #sidebar {
-      width: 240px;
-      background: #f4f4f4;
-      border-right: 1px solid #ddd;
-      display: flex;
-      flex-direction: column;
-    }
+/* SIDEBAR */
+#sidebar {
+  width: 240px;
+  background: #f4f4f4;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+}
 
-    #sidebar-header {
-      padding: 12px;
-      border-bottom: 1px solid #ddd;
-      font-weight: bold;
-    }
+#people-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
-    #people-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+.person-chip {
+  background: white;
+  border: 1px solid #ddd;
+  padding: 8px;
+  cursor: grab;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+}
 
-    .person-chip {
-      padding: 8px;
-      background: white;
-      border: 1px solid #ddd;
-      cursor: grab;
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-    }
+/* MAIN */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 
-    #admin-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding: 10px;
-      border-top: 1px solid #ddd;
-    }
+#header {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+}
 
-    #admin-panel input,
-    #admin-panel select,
-    #admin-panel button {
-      padding: 6px;
-      font-size: 12px;
-    }
+#mode {
+  font-size: 12px;
+  color: #666;
+}
 
-    /* MAIN */
-    #main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
+/* PAD LAYOUT */
+#site {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
 
-    #main-header {
-      padding: 12px;
-      border-bottom: 1px solid #ddd;
-      display: flex;
-      justify-content: space-between;
-    }
+.pad {
+  background: white;
+  border: 1px solid #ddd;
+}
 
-    #mode {
-      font-size: 12px;
-      color: #666;
-    }
+.pad-header {
+  padding: 8px;
+  background: #eee;
+  font-weight: bold;
+}
 
-    #site {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+.pad-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px;
+}
 
-    .pod {
-      border: 1px solid #ddd;
-      background: white;
-    }
+/* TENT */
+.tent {
+  border: 1px solid #ccc;
+  padding: 6px;
+  min-height: 60px;
+  font-size: 11px;
+  background: #fafafa;
+}
 
-    .pod-header {
-      padding: 8px;
-      background: #eee;
-      font-weight: bold;
-      font-size: 12px;
-    }
+.tent.sharing {
+  background: #e8f7f0;
+}
 
-    .pod-tents {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      padding: 8px;
-    }
+.tent.single {
+  background: #eef4ff;
+}
 
-    .tent {
-      border: 1px solid #ccc;
-      padding: 6px;
-      font-size: 11px;
-      min-height: 50px;
-      background: #fafafa;
-    }
+.tent.drag-over {
+  border: 2px dashed #000;
+}
 
-    .tent.drag-over {
-      border: 2px dashed #000;
-    }
-  </style>
+.slot {
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.small {
+  font-size: 9px;
+  opacity: 0.7;
+}
+</style>
 </head>
 
 <body>
 
 <div id="app">
 
-  <!-- SIDEBAR -->
-  <div id="sidebar">
-
-    <div id="sidebar-header">
-      Campsite System
-    </div>
-
-    <div id="people-list"></div>
-
-    <div id="admin-panel">
-      <div style="font-size:12px;font-weight:bold;">Admin Panel</div>
-
-      <input id="new-name" placeholder="Name" />
-      <select id="new-type">
-        <option value="sharing">Sharing</option>
-        <option value="solo">Solo</option>
-      </select>
-
-      <button onclick="addPerson()">Add Person</button>
-      <button onclick="clearAll()">Clear All</button>
-    </div>
-
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div style="padding:10px;font-weight:bold;">
+    Pad Booking System
   </div>
 
-  <!-- MAIN -->
-  <div id="main">
+  <div id="people-list"></div>
+</div>
 
-    <div id="main-header">
-      <div>Tent Booking System</div>
-      <div id="mode"></div>
-    </div>
+<!-- MAIN -->
+<div id="main">
 
-    <div id="site"></div>
-
+  <div id="header">
+    <div>Pads Overview</div>
+    <div id="mode"></div>
   </div>
+
+  <div id="site"></div>
+
+</div>
 
 </div>
 
 <script>
-/* ---------------- STATE ---------------- */
+/* ---------------- DATA ---------------- */
 
-const PODS = 6;
-const TENTS = 12;
-
-let isAdmin = true; // 👈 CHANGE THIS: true = Caitlin (admin), false = user
-
+let isAdmin = true;
 let dragId = null;
 
+const PADS = {
+  3: { sharing: 6, single: 4 },
+  4: { sharing: 4, single: 4 },
+  5: { sharing: 4, single: 4 },
+  10:{ sharing: 7, single: 7 }
+};
+
 let people = [
-  { id: "p1", name: "Alice", type: "sharing" },
-  { id: "p2", name: "Ben", type: "solo" },
-  { id: "p3", name: "Cara", type: "sharing" }
+  { id:"p1", name:"Alice", type:"sharing" },
+  { id:"p2", name:"Ben", type:"single" },
+  { id:"p3", name:"Cara", type:"sharing" },
+  { id:"p4", name:"Dan", type:"single" }
 ];
 
 let assignments = {};
 
 /* ---------------- HELPERS ---------------- */
 
-function person(id) {
+function person(id){
   return people.find(p => p.id === id);
 }
 
-/* ---------------- ADMIN DISPLAY ---------------- */
+/* ---------------- MODE ---------------- */
 
-function updateMode() {
+function updateMode(){
   document.getElementById("mode").textContent =
-    isAdmin ? "Caitlin · Admin" : "User";
+    isAdmin ? "Admin Mode" : "User Mode";
 }
 
 /* ---------------- ASSIGN ---------------- */
 
-function assign(pid, tid) {
+function assign(pid, padKey, slotType){
   const p = person(pid);
-  if (!p) return;
+  if(!p) return;
 
-  const a = assignments[tid] || { slot1: null, slot2: null, owner: null };
+  const key = `${padKey}-${slotType}`;
+  const a = assignments[key] || { slot1:null, slot2:null };
 
-  if (!isAdmin && a.slot1) return;
-
-  if (p.type === "sharing") {
+  if(p.type === "sharing" && slotType === "sharing"){
+    if(a.slot1) return;
     a.slot1 = a.slot2 = p.name;
-  } else {
+  }
+
+  if(p.type === "single" && slotType === "single"){
+    if(a.slot1) return;
     a.slot1 = p.name;
     a.slot2 = "N/A";
   }
 
   a.owner = p.id;
-  assignments[tid] = a;
-  p._tent = tid;
+  assignments[key] = a;
+  p._slot = key;
 
   render();
 }
 
 /* ---------------- REMOVE ---------------- */
 
-function remove(owner) {
-  const p = person(owner);
-
-  for (const k in assignments) {
-    if (assignments[k].owner === owner) {
+function remove(owner){
+  for(const k in assignments){
+    if(assignments[k].owner === owner){
       delete assignments[k];
     }
   }
 
-  if (p) delete p._tent;
+  const p = person(owner);
+  if(p) delete p._slot;
 
   render();
 }
 
 /* ---------------- RENDER ---------------- */
 
-function render() {
+function render(){
   updateMode();
   renderPeople();
-  renderSite();
+  renderPads();
 }
 
 /* ---------------- PEOPLE ---------------- */
 
-function renderPeople() {
+function renderPeople(){
   const list = document.getElementById("people-list");
   list.innerHTML = "";
 
-  people.filter(p => !p._tent).forEach(p => {
+  people.filter(p => !p._slot).forEach(p => {
     const el = document.createElement("div");
     el.className = "person-chip";
     el.draggable = true;
@@ -267,39 +256,42 @@ function renderPeople() {
   });
 }
 
-/* ---------------- SITE ---------------- */
+/* ---------------- PADS ---------------- */
 
-function renderSite() {
+function renderPads(){
   const site = document.getElementById("site");
   site.innerHTML = "";
 
-  for (let pod = 1; pod <= PODS; pod++) {
-    const podEl = document.createElement("div");
-    podEl.className = "pod";
+  Object.keys(PADS).forEach(padKey => {
 
-    const header = document.createElement("div");
-    header.className = "pod-header";
-    header.textContent = "Pod " + pod;
+    const pad = PADS[padKey];
+
+    const padEl = document.createElement("div");
+    padEl.className = "pad";
+
+    padEl.innerHTML = `
+      <div class="pad-header">Pad ${padKey}</div>
+    `;
 
     const grid = document.createElement("div");
-    grid.className = "pod-tents";
+    grid.className = "pad-grid";
 
-    for (let t = 1; t <= TENTS; t++) {
-      const tid = `${pod}-${t}`;
-      const a = assignments[tid];
+    /* SHARING SLOTS */
+    for(let i=1;i<=pad.sharing;i++){
+      const key = `${padKey}-sharing-${i}`;
+      const a = assignments[key];
 
       const el = document.createElement("div");
-      el.className = "tent";
+      el.className = "tent sharing";
 
       el.innerHTML = `
-        <div><strong>T${t}</strong></div>
-        <div>${a?.slot1 || "empty"}</div>
-        <div>${a?.slot2 || ""}</div>
-        ${a?.owner ? `<button onclick="remove('${a.owner}')">Remove</button>` : ""}
+        <div><b>Sharing ${i}</b></div>
+        <div class="slot">${a?.slot1 || "empty"}</div>
+        ${a?.owner ? `<button onclick="remove('${a.owner}')">x</button>` : ""}
       `;
 
       el.ondragover = e => {
-        if (!dragId) return;
+        if(!dragId) return;
         e.preventDefault();
         el.classList.add("drag-over");
       };
@@ -308,42 +300,45 @@ function renderSite() {
 
       el.ondrop = e => {
         e.preventDefault();
-        assign(dragId, tid);
+        assign(dragId, padKey, "sharing");
       };
 
       grid.appendChild(el);
     }
 
-    podEl.appendChild(header);
-    podEl.appendChild(grid);
-    site.appendChild(podEl);
-  }
-}
+    /* SINGLE SLOTS */
+    for(let i=1;i<=pad.single;i++){
+      const key = `${padKey}-single-${i}`;
+      const a = assignments[key];
 
-/* ---------------- ADMIN ACTIONS ---------------- */
+      const el = document.createElement("div");
+      el.className = "tent single";
 
-function addPerson() {
-  if (!isAdmin) return;
+      el.innerHTML = `
+        <div><b>Single ${i}</b></div>
+        <div class="slot">${a?.slot1 || "empty"}</div>
+        ${a?.owner ? `<button onclick="remove('${a.owner}')">x</button>` : ""}
+      `;
 
-  const name = document.getElementById("new-name").value;
-  const type = document.getElementById("new-type").value;
+      el.ondragover = e => {
+        if(!dragId) return;
+        e.preventDefault();
+        el.classList.add("drag-over");
+      };
 
-  people.push({
-    id: "p" + Date.now(),
-    name,
-    type
+      el.ondragleave = () => el.classList.remove("drag-over");
+
+      el.ondrop = e => {
+        e.preventDefault();
+        assign(dragId, padKey, "single");
+      };
+
+      grid.appendChild(el);
+    }
+
+    padEl.appendChild(grid);
+    site.appendChild(padEl);
   });
-
-  render();
-}
-
-function clearAll() {
-  if (!isAdmin) return;
-
-  people.forEach(p => delete p._tent);
-  assignments = {};
-
-  render();
 }
 
 /* ---------------- INIT ---------------- */
