@@ -26,14 +26,6 @@ body {
   flex-direction: column;
 }
 
-#top-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-bottom: 1px solid #ddd;
-}
-
-/* HELP */
 #help-btn {
   display: block;
   margin: 10px;
@@ -64,7 +56,6 @@ body {
   gap: 6px;
 }
 
-/* PEOPLE */
 .person-chip {
   background: white;
   border: 1px solid #ddd;
@@ -73,6 +64,12 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.person-chip button {
+  font-size: 10px;
+  padding: 2px 6px;
+  cursor: pointer;
 }
 
 /* ADMIN */
@@ -98,23 +95,30 @@ input, select, button {
   flex-direction: column;
 }
 
+/* HERO IMAGE NOW ABOVE HEADER */
+#hero-image {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+  display: block;
+  border-bottom: 1px solid #ddd;
+}
+
 /* HEADER */
 #header {
   padding: 12px;
   border-bottom: 1px solid #ddd;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
-/* IMAGE OVER PAD SECTION */
-#hero-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-bottom: 1px solid #ddd;
+#mode {
+  font-size: 12px;
+  color: #666;
 }
 
-/* PAD AREA */
+/* SITE GRID */
 #site {
   flex: 1;
   overflow-y: auto;
@@ -196,8 +200,6 @@ input, select, button {
 <!-- SIDEBAR -->
 <div id="sidebar">
 
-  <img id="top-image" src="https://i.ibb.co/YsbpFqq/image.jpg" />
-
   <a id="help-btn" href="https://wa.me/1XXXXXXXXXX" target="_blank">
     Help / WhatsApp Support
   </a>
@@ -229,13 +231,13 @@ input, select, button {
 <!-- MAIN -->
 <div id="main">
 
+  <!-- IMAGE NOW ABOVE PAD OVERVIEW -->
+  <img id="hero-image" src="https://i.ibb.co/YsbpFqq/image.jpg" />
+
   <div id="header">
-    <div>Pads Overview</div>
+    <div>Pad Overview</div>
     <div id="mode"></div>
   </div>
-
-  <!-- FULL WIDTH IMAGE ABOVE PADS -->
-  <img id="hero-image" src="https://i.ibb.co/YsbpFqq/image.jpg" />
 
   <div id="site"></div>
 
@@ -269,8 +271,6 @@ function person(id){
   return people.find(p => p.id === id);
 }
 
-/* ---------------- ADMIN ---------------- */
-
 function unlockAdmin(){
   const pass = document.getElementById("admin-pass").value;
 
@@ -291,14 +291,11 @@ function lockAdmin(){
   render();
 }
 
-/* ---------------- PEOPLE ---------------- */
-
 function addPerson(){
   if(!isAdmin) return;
 
   const name = document.getElementById("new-name").value.trim();
   const type = document.getElementById("new-type").value;
-
   if(!name) return;
 
   people.push({
@@ -324,12 +321,9 @@ function deletePerson(id){
   render();
 }
 
-/* ---------------- ASSIGN ---------------- */
-
 function assign(pid, padKey, slotType, index){
   const p = person(pid);
   if(!p) return;
-
   if(p.type !== slotType) return;
 
   const key = `${padKey}-${slotType}-${index}`;
@@ -365,8 +359,6 @@ function remove(owner){
   render();
 }
 
-/* ---------------- RENDER ---------------- */
-
 function render(){
   document.getElementById("mode").textContent =
     isAdmin ? "Admin Mode" : "User Mode";
@@ -374,8 +366,6 @@ function render(){
   renderPeople();
   renderPads();
 }
-
-/* ---------------- PEOPLE ---------------- */
 
 function renderPeople(){
   const list = document.getElementById("people-list");
@@ -393,12 +383,9 @@ function renderPeople(){
     `;
 
     el.ondragstart = () => dragId = p.id;
-
     list.appendChild(el);
   });
 }
-
-/* ---------------- PADS ---------------- */
 
 function renderPads(){
   const site = document.getElementById("site");
